@@ -5,129 +5,95 @@ const characterSets = {
   special: "!@#$%^&*",
 };
 
-const users = {};
+document.addEventListener("DOMContentLoaded", function () {
+  const generateBtn = document.getElementById("generateBtn");
+  generateBtn.addEventListener("click", generatePassword);
 
-function getUserName() {
-  while (true) {
-    const userName = prompt("Please enter your name (letters only):");
-
-    if (/^[A-Za-z]+$/.test(userName)) {
-      return userName;
-    }
-
-    alert("Invalid name. Please try again.");
-  }
-}
+  const searchBtn = document.getElementById("searchBtn");
+  searchBtn.addEventListener("click", searchPasswords);
+});
 
 function generatePassword() {
-  let lengthInput;
-  let length;
+  const siteNameInput = document.getElementById("siteName");
+  const siteName = siteNameInput.value.trim();
 
-  while (true) {
-    lengthInput = prompt("Enter the desired password length:");
-    length = parseInt(lengthInput);
-
-    if (!isNaN(length) && length > 0 && length % 1 === 0) {
-      break;
-    }
-
-    alert("Please enter a positive number");
+  if (siteName === "") {
+      alert("Please enter a valid website name.");
+      return;
   }
 
-  const hasUppercase = confirm("Include uppercase letters?");
-  const hasLowercase = confirm("Include lowercase letters?");
-  const hasNumbers = confirm("Include numbers?");
-  const hasSpecial = confirm("Include special characters?");
+  const lengthInput = document.getElementById("length");
+  const length = parseInt(lengthInput.value);
+
+  const hasUppercase = document.getElementById("uppercase").checked;
+  const hasLowercase = document.getElementById("lowercase").checked;
+  const hasNumbers = document.getElementById("numbers").checked;
+  const hasSpecial = document.getElementById("special").checked;
+
   let pool = "";
   let password = "";
 
   if (hasUppercase) {
-    pool += characterSets.uppercase;
+      pool += characterSets.uppercase;
   }
   if (hasLowercase) {
-    pool += characterSets.lowercase;
+      pool += characterSets.lowercase;
   }
   if (hasNumbers) {
-    pool += characterSets.numbers;
+      pool += characterSets.numbers;
   }
   if (hasSpecial) {
-    pool += characterSets.special;
+      pool += characterSets.special;
   }
 
   if (pool === "") {
-    console.log("Select at least one character type.");
-    return;
+      const passwordDisplay = document.getElementById("passwordDisplay");
+      passwordDisplay.textContent = "Select at least one character type.";
+      return;
   }
 
   const poolLength = pool.length;
   for (let i = 0; i < length; i++) {
-    const randomIndex = (i * i + i + 41) % poolLength;
-    password += pool[randomIndex];
+      const randomIndex = Math.floor(Math.random() * poolLength);
+      password += pool[randomIndex];
   }
 
-  return password;
+  const passwordDisplay = document.getElementById("passwordDisplay");
+  passwordDisplay.textContent = password;
+
+  const copyBtn = document.getElementById("copyBtn");
+  copyBtn.addEventListener("click", function () {
+      const textArea = document.createElement("textarea");
+      textArea.value = password;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      alert("Password copied to clipboard!");
+  });
+
+  savePassword(siteName, password);
 }
 
-
-function displayPassword(password) {
-  console.log(`Generated Password: ${password}`);
-}
-
-
-function savePassword(userName, password) {
-  if (!(userName in users)) {
-    users[userName] = [];
-  }
-  users[userName].push(password);
-  console.log(`Password saved for '${userName}'.`);
-}
-
-
-function searchPasswords(userName, searchTerm) {
-  if (userName in users) {
-    const userPasswords = users[userName];
-    const matchingPasswords = userPasswords.filter((password) =>
-      password.includes(searchTerm)
-    );
-    console.log(
-      `Matching passwords for '${userName}' and search term '${searchTerm}':`
-    );
-    console.log(matchingPasswords);
+function savePassword(site, password) {
+  const storedData = JSON.parse(localStorage.getItem("passwords")) || {};
+  if (!(site in storedData)) {
+      storedData[site] = password;
+      localStorage.setItem("passwords", JSON.stringify(storedData));
+      alert(`Password saved for site '${site}'.`);
   } else {
-    console.log(`User '${userName}' not found.`);
+      alert(`Password already exists for site '${site}'.`);
   }
 }
 
-
-function filterPasswordsByLength(userName, length) {
-  if (userName in users) {
-    const userPasswords = users[userName];
-    const filteredPasswords = userPasswords.filter(
-      (password) => password.length === length
-    );
-    console.log(
-      `Passwords with length ${length} for '${userName}':`
-    );
-    console.log(filteredPasswords);
+function searchPasswords() {
+  const searchSiteInput = document.getElementById("searchSiteInput").value.trim();
+  const storedData = JSON.parse(localStorage.getItem("passwords")) || {};
+  if (searchSiteInput in storedData) {
+      const sitePassword = storedData[searchSiteInput];
+      const passwordDisplay = document.getElementById("passwordDisplay");
+      passwordDisplay.textContent = sitePassword;
   } else {
-    console.log(`User '${userName}' not found.`);
+      alert(`Site '${searchSiteInput}' not found.`);
   }
-}
-
-
-const userName = getUserName();
-const password = generatePassword();
-displayPassword(password);
-savePassword(userName, password);
-
-const searchTerm = prompt("Enter username:");
-searchPasswords(userName, searchTerm);
-
-const filterLengthInput = prompt("Enter the desired password length for filtering:");
-const filterLength = parseInt(filterLengthInput);
-
-if (!isNaN(filterLength) && filterLength > 0 && filterLength % 1 === 0) {
-  filterPasswordsByLength(userName, filterLength);
-} else {
-  console.log("Invalid length. Please enter a positive whole number.");
 }
