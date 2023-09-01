@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     searchBtn.addEventListener("click", searchPasswords);
   });
   
-  function generatePassword() {
+  async function generatePassword() {
     const siteName = document.getElementById("siteName").value.trim();
     const length = parseInt(document.getElementById("length").value);
     const hasUppercase = document.getElementById("uppercase").checked;
@@ -28,26 +28,45 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * pool.length);
-      password += pool[randomIndex];
+    try {
+      const response = await fetch("passwords.json");
+  
+      if (!response.ok) {
+        throw new Error("Failed to load password data");
+      }
+  
+      const data = await response.json();
+  
+      const sitePassword = data[siteName];
+      if (!sitePassword) {
+        const passwordDisplay = document.getElementById("passwordDisplay");
+        passwordDisplay.textContent = "Site not found in data.";
+        return;
+      }
+  
+      for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        password += pool[randomIndex];
+      }
+  
+      const passwordDisplay = document.getElementById("passwordDisplay");
+      passwordDisplay.textContent = password;
+  
+      const copyBtn = document.getElementById("copyBtn");
+      copyBtn.addEventListener("click", () => {
+        const textArea = document.createElement("textarea");
+        textArea.value = password;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        swal("Copied to clipboard", "Password copied to clipboard", "success");
+      });
+  
+      savePassword(siteName, password);
+    } catch (error) {
+      console.error("Error loading password data:", error);
     }
-  
-    const passwordDisplay = document.getElementById("passwordDisplay");
-    passwordDisplay.textContent = password;
-  
-    const copyBtn = document.getElementById("copyBtn");
-    copyBtn.addEventListener("click", () => {
-      const textArea = document.createElement("textarea");
-      textArea.value = password;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      alert("Password copied to clipboard!");
-    });
-  
-    savePassword(siteName, password);
   }
   
   function savePassword(site, password) {
@@ -55,9 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!storedData[site]) {
       storedData[site] = password;
       localStorage.setItem("passwords", JSON.stringify(storedData));
-      alert(`Password saved for site '${site}'.`);
+      swal(`Password saved for site '${site}'.`);
     } else {
-      alert(`Password already exists for site '${site}'.`);
+      swal(`Password already exists for site '${site}'.`);
     }
   }
   
@@ -67,10 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const sitePassword = storedData[searchSiteInput];
     const passwordDisplay = document.getElementById("passwordDisplay");
   
-    if (sitePassword) {
+    if (!localStorage) {
+      swal("Error", "LocalStorage is not available.", "error");
+    } else if (sitePassword) {
       passwordDisplay.textContent = sitePassword;
     } else {
-      alert(`Site '${searchSiteInput}' not found.`);
+      swal(`Site '${searchSiteInput}' not found.`);
     }
   }
-  
