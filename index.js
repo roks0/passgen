@@ -58,7 +58,8 @@ async function generatePassword() {
 
   const randomWord = await fetchRandomWord();
   if (randomWord) {
-    passwordArray[Math.floor(Math.random() * length)] = randomWord;
+    const randomLetter = randomWord.charAt(Math.floor(Math.random() * randomWord.length));
+    passwordArray[Math.floor(Math.random() * length)] = randomLetter;
   }
 
   const password = passwordArray.join('');
