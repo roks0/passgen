@@ -1,8 +1,3 @@
-const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
-const numberChars = "0123456789";
-const specialChars = "!@#$%^&*";
-
 document.addEventListener("DOMContentLoaded", () => {
   const generateBtn = document.getElementById("generateBtn");
   generateBtn.addEventListener("click", generatePassword);
@@ -11,7 +6,35 @@ document.addEventListener("DOMContentLoaded", () => {
   searchBtn.addEventListener("click", searchPasswords);
 });
 
-function generatePassword() {
+
+function generateCharacterPool(hasUppercase, hasLowercase, hasNumbers, hasSpecial) {
+  const pools = [];
+  if (hasUppercase) pools.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  if (hasLowercase) pools.push("abcdefghijklmnopqrstuvwxyz");
+  if (hasNumbers) pools.push("0123456789");
+  if (hasSpecial) pools.push("!@#$%^&*");
+  return pools.join("");
+}
+
+function getRandomCharacter(pool) {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+async function fetchRandomWord() {
+  try {
+    const response = await fetch("https://random-word-api.herokuapp.com/word");
+    if (!response.ok) {
+      throw new Error("Failed to fetch random word");
+    }
+    const data = await response.json();
+    return data[0]; 
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+async function generatePassword() {
   const siteName = document.getElementById("siteName").value.trim();
   const length = parseInt(document.getElementById("length").value);
   const hasUppercase = document.getElementById("uppercase").checked;
@@ -19,31 +42,26 @@ function generatePassword() {
   const hasNumbers = document.getElementById("numbers").checked;
   const hasSpecial = document.getElementById("special").checked;
 
-  const selectedCharTypes = [];
+  const pool = generateCharacterPool(hasUppercase, hasLowercase, hasNumbers, hasSpecial);
 
-  if (hasUppercase) selectedCharTypes.push(uppercaseChars);
-  if (hasLowercase) selectedCharTypes.push(lowercaseChars);
-  if (hasNumbers) selectedCharTypes.push(numberChars);
-  if (hasSpecial) selectedCharTypes.push(specialChars);
-
-  const pool = [];
-
-  selectedCharTypes.forEach(charType => {
-    pool.push(...charType.split(''));
-  });
-
-  if (!pool.length) {
+  if (!pool) {
     const passwordDisplay = document.getElementById("passwordDisplay");
     passwordDisplay.textContent = "Select at least one character type.";
     return;
   }
 
-  let password = "";
-
+  const passwordArray = [];
+  
   for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * pool.length);
-    password += pool[randomIndex];
+    passwordArray.push(getRandomCharacter(pool));
   }
+
+  const randomWord = await fetchRandomWord();
+  if (randomWord) {
+    passwordArray[Math.floor(Math.random() * length)] = randomWord;
+  }
+
+  const password = passwordArray.join('');
 
   const passwordDisplay = document.getElementById("passwordDisplay");
   passwordDisplay.textContent = password;
@@ -85,3 +103,4 @@ function searchPasswords() {
     swal(`Site '${searchSiteInput}' not found.`);
   }
 }
+
