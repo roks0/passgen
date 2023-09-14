@@ -1,76 +1,87 @@
+const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+const numberChars = "0123456789";
+const specialChars = "!@#$%^&*";
+
 document.addEventListener("DOMContentLoaded", () => {
-    const generateBtn = document.getElementById("generateBtn");
-    generateBtn.addEventListener("click", generatePassword);
-  
-    const searchBtn = document.getElementById("searchBtn");
-    searchBtn.addEventListener("click", searchPasswords);
+  const generateBtn = document.getElementById("generateBtn");
+  generateBtn.addEventListener("click", generatePassword);
+
+  const searchBtn = document.getElementById("searchBtn");
+  searchBtn.addEventListener("click", searchPasswords);
+});
+
+function generatePassword() {
+  const siteName = document.getElementById("siteName").value.trim();
+  const length = parseInt(document.getElementById("length").value);
+  const hasUppercase = document.getElementById("uppercase").checked;
+  const hasLowercase = document.getElementById("lowercase").checked;
+  const hasNumbers = document.getElementById("numbers").checked;
+  const hasSpecial = document.getElementById("special").checked;
+
+  const selectedCharTypes = [];
+
+  if (hasUppercase) selectedCharTypes.push(uppercaseChars);
+  if (hasLowercase) selectedCharTypes.push(lowercaseChars);
+  if (hasNumbers) selectedCharTypes.push(numberChars);
+  if (hasSpecial) selectedCharTypes.push(specialChars);
+
+  const pool = [];
+
+  selectedCharTypes.forEach(charType => {
+    pool.push(...charType.split(''));
   });
-  
-  function generatePassword() {
-    const siteName = document.getElementById("siteName").value.trim();
-    const length = parseInt(document.getElementById("length").value);
-    const hasUppercase = document.getElementById("uppercase").checked;
-    const hasLowercase = document.getElementById("lowercase").checked;
-    const hasNumbers = document.getElementById("numbers").checked;
-    const hasSpecial = document.getElementById("special").checked;
-  
-    let pool = "";
-    let password = "";
-  
-    if (hasUppercase) pool += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    if (hasLowercase) pool += "abcdefghijklmnopqrstuvwxyz";
-    if (hasNumbers) pool += "0123456789";
-    if (hasSpecial) pool += "!@#$%^&*";
-  
-    if (!pool) {
-      const passwordDisplay = document.getElementById("passwordDisplay");
-      passwordDisplay.textContent = "Select at least one character type.";
-      return;
-    }
-  
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * pool.length);
-      password += pool[randomIndex];
-    }
-  
+
+  if (!pool.length) {
     const passwordDisplay = document.getElementById("passwordDisplay");
-    passwordDisplay.textContent = password;
-  
-    const copyBtn = document.getElementById("copyBtn");
-    copyBtn.addEventListener("click", () => {
-      const textArea = document.createElement("textarea");
-      textArea.value = password;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      swal("Copied to clipboard", "Password copied to clipboard", "success");
-    });
-  
-    savePassword(siteName, password);
+    passwordDisplay.textContent = "Select at least one character type.";
+    return;
   }
-  
-  function savePassword(site, password) {
-    const storedData = JSON.parse(localStorage.getItem("passwords")) || {};
-    if (!storedData[site]) {
-      storedData[site] = password;
-      localStorage.setItem("passwords", JSON.stringify(storedData));
-      swal(`Password saved for site '${site}'.`);
-    } else {
-      swal(`Password already exists for site '${site}'.`);
-    }
+
+  let password = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    password += pool[randomIndex];
   }
-  
-  function searchPasswords() {
-    const searchSiteInput = document.getElementById("searchSiteInput").value.trim();
-    const storedData = JSON.parse(localStorage.getItem("passwords")) || {};
-    const sitePassword = storedData[searchSiteInput];
-    const passwordDisplay = document.getElementById("passwordDisplay");
-  
-    if (sitePassword) {
-      passwordDisplay.textContent = sitePassword;
-    } else {
-      swal(`Site '${searchSiteInput}' not found.`);
-    }
+
+  const passwordDisplay = document.getElementById("passwordDisplay");
+  passwordDisplay.textContent = password;
+
+  const copyBtn = document.getElementById("copyBtn");
+  copyBtn.addEventListener("click", () => {
+    const textArea = document.createElement("textarea");
+    textArea.value = password;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+    swal("Copied to clipboard", "Password copied to clipboard", "success");
+  });
+
+  savePassword(siteName, password);
+}
+
+function savePassword(site, password) {
+  const storedData = JSON.parse(localStorage.getItem("passwords")) || {};
+  if (!storedData[site]) {
+    storedData[site] = password;
+    localStorage.setItem("passwords", JSON.stringify(storedData));
+    swal(`Password saved for site '${site}'.`);
+  } else {
+    swal(`Password already exists for site '${site}'.`);
   }
-  
+}
+
+function searchPasswords() {
+  const searchSiteInput = document.getElementById("searchSiteInput").value.trim();
+  const storedData = JSON.parse(localStorage.getItem("passwords")) || {};
+  const sitePassword = storedData[searchSiteInput];
+  const passwordDisplay = document.getElementById("passwordDisplay");
+
+  if (sitePassword) {
+    passwordDisplay.textContent = sitePassword;
+  } else {
+    swal(`Site '${searchSiteInput}' not found.`);
+  }
+}
